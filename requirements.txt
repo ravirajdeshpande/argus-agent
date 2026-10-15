@@ -1,10 +1,40 @@
-langgraph>=1.0
-langchain-openai>=1.0
-langchain-ollama>=1.0
-chromadb>=1.0
-pypdf>=5.0
-scikit-learn>=1.5
-python-dotenv>=1.0
-rich>=13.0
-pytest>=8.0
--e .
+# =====================================================================================
+# ARGUS - Autonomous Risk & Global Unified Surveillance Agent
+# Runtime dependencies.  Install:  pip install -r requirements.txt
+# Python 3.11+ (developed on 3.13).  Ranges allow bug-fix updates but stop before the
+# next major version, which is where LangChain/LangGraph/Pydantic APIs tend to break.
+# =====================================================================================
+
+# --- Orchestration: LangGraph owns state, branching, loops, retries, checkpointing ----
+langgraph>=1.0,<2
+langgraph-checkpoint-sqlite>=2.0      # durable checkpoints so runs can be resumed / audited
+langchain-core>=1.0,<2                # message + runnable types used by nodes and models
+
+# --- LLM providers for the 3-tier model cascade (config picks which one per tier) ----
+langchain-openai>=1.0,<2              # cloud tiers
+langchain-ollama>=1.0,<2              # local tiers (needs Ollama installed separately)
+
+# --- FAISS RAG: ingestion, indexing, retrieval --------------------------------------
+faiss-cpu>=1.11,<2                    # vector index (the brief specifies FAISS)
+numpy>=1.26,<3
+pypdf>=5.0                            # read PDF documents
+scikit-learn>=1.5                     # guardrail classifier + TF-IDF fallback for fast offline tests
+sentence-transformers>=3.3            # local embeddings (installs PyTorch; model downloads on first run)
+
+# --- MCP tool layer: news / government / markets / company servers ------------------
+mcp>=1.0,<2                           # official MCP Python SDK (client + FastMCP servers)
+httpx>=0.27,<1                        # HTTP client for live gateways and API calls
+tenacity>=8.2                         # bounded retry + backoff (brief section 21)
+
+# --- Data contracts and configuration -----------------------------------------------
+pydantic>=2.7,<3                      # validated schemas: claims, evidence, state objects
+pydantic-settings>=2.2,<3             # typed settings read from environment / .env
+python-dotenv>=1.0                    # load .env during local development
+pyyaml>=6.0                           # model-routing policy and scoring weights as YAML
+
+# --- CLI / reporting ----------------------------------------------------------------
+rich>=13.0                            # readable executive report + progress in the terminal
+
+# --- Optional -----------------------------------------------------------------------
+# truststore>=0.10                    # use the OS certificate store (corporate SSL proxies)
+# streamlit>=1.35                     # only if we add a web UI later

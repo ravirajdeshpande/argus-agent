@@ -1,0 +1,13 @@
+# Development and quality tooling.  Install:  pip install -r requirements-dev.txt
+# (this file includes everything in requirements.txt)
+-r requirements.txt
+
+# --- Testing and evaluation harness ---------------------------------------------------
+pytest>=8.0
+pytest-cov>=5.0                       # coverage report for the test suite
+
+# --- Code quality ---------------------------------------------------------------------
+ruff>=0.6                             # linter + formatter in one tool
+mypy>=1.10                            # static type checking
+types-PyYAML>=6.0                     # type stubs for pyyaml
+pre-commit>=3.7                       # run ruff/mypy automatically before each commit
