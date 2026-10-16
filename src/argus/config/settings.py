@@ -20,10 +20,12 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     
     llm_provider: Literal["openai", "ollama"] = "openai"
-    openai_agent_model: str = "gpt-5.1"
-    openai_guardrail_model: str = "gpt-5.4-nano"
-    ollama_agent_model: str = "gemma3:4b"
+    openai_agent_model: str = "gpt-5.1" 
+    openai_guardrail_model: str = "gpt-5.4-nano" # Tier 1 model for guardrails (e.g., safety, content filtering)
+    ollama_agent_model: str = "gemma3:4b"  # Tier 3 model for agent tasks (e.g., reasoning, planning)
     ollama_guardrail_model: str = "gemma3:4b"
+    openai_mid_model: str = "gpt-5.4-mini"   # Tier 2 model for mid-level tasks (e.g., summarization, classification)
+    ollama_mid_model: str = "gemma3:4b"
 
     chunk_size: int = 200
     chunk_overlap: int = 40
