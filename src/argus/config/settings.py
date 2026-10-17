@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     chunk_size: int = 200
     chunk_overlap: int = 40
     top_k: int = 4
+    
+    budget_max_calls: int = 200
+    budget_max_tokens: int = 500_000
+    budget_max_cost_usd: float = 2.0
 
     data_dir: Path = ROOT / "data"
     faiss_index_dir: Path = ROOT / "data" / "processed" / "faiss"
