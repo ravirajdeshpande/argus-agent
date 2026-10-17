@@ -38,3 +38,7 @@ rich>=13.0                            # readable executive report + progress in 
 # --- Optional -----------------------------------------------------------------------
 # truststore>=0.10                    # use the OS certificate store (corporate SSL proxies)
 # streamlit>=1.35                     # only if we add a web UI later
+
+openai
+
+

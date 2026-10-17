@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     openai_api_key: SecretStr | None = None
+    openai_api_key: str = ""
     ollama_base_url: str = "http://localhost:11434"
     
     llm_provider: Literal["openai", "ollama"] = "openai"
