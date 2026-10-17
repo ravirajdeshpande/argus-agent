@@ -7,7 +7,7 @@ from argus.guardrails.evidence import (
 )
 
 HIGH_RISK_THRESHOLD = 7.0
-SENSITIVE_CATEGORIES = {"supplier_communication", "procurement", "legal"}
+SENSITIVE_CATEGORIES = {"supplier_communication", "procurement", "legal", "uncategorized"}
 
 
 def route_after_gate(

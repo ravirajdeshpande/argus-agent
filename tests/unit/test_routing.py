@@ -60,7 +60,7 @@ def test_low_risk_confident_report_is_autonomous():
     assert route_after_recommendation(state()) == "final_evaluation"
 
 
-@pytest.mark.parametrize("category", ["supplier_communication", "procurement", "legal"])
+@pytest.mark.parametrize("category", ["supplier_communication", "procurement", "legal", "uncategorized"])
 def test_sensitive_actions_require_human_approval(category):
     s = state(recommended_actions=[{"action": "do it", "category": category}])
     assert route_after_recommendation(s) == "human_approval"

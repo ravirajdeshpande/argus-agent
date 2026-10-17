@@ -27,6 +27,24 @@ def make_embedder(client, model: str = DEFAULT_EMBEDDING_MODEL) -> Embedder:
 
     return embed
 
+DEFAULT_LOCAL_MODEL = "all-MiniLM-L6-v2"
+
+
+def make_local_embedder(model=None, model_name: str = DEFAULT_LOCAL_MODEL) -> Embedder:
+    """Local embedder (sentence-transformers). Pass `model` to reuse or fake one."""
+    if model is None:
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(model_name)
+
+    def embed(texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        vectors = model.encode(texts, show_progress_bar=False)
+        return np.asarray(vectors, dtype="float32").tolist()
+
+    return embed
+
 
 class FaissStore:
     """FAISS index plus the chunk texts and metadata it was built from."""

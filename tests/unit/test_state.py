@@ -4,7 +4,7 @@ LIST_FIELDS = [
     "entities", "companies", "countries", "internal_documents", "news_articles",
     "government_sources", "market_signals", "claims", "conflicting_claims",
     "verified_claims", "impacted_products", "impacted_suppliers",
-    "missing_information", "recommended_actions",
+    "missing_information", "recommended_actions", "review_log"
 ]
 
 
@@ -35,3 +35,9 @@ def test_investigation_plan_defaults_to_empty_dict_not_shared():
     assert a["investigation_plan"] == {}
     a["investigation_plan"]["x"] = 1
     assert b["investigation_plan"] == {}
+    
+def test_evaluation_defaults_to_empty_dict_not_shared():
+    a, b = initial_state("a"), initial_state("b")
+    assert a["evaluation"] == {}
+    a["evaluation"]["x"] = 1
+    assert b["evaluation"] == {}

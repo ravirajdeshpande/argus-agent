@@ -22,9 +22,12 @@ class IntelligenceState(TypedDict):
     missing_information: list
     investigation_iterations: int
     risk_score: float
+    risk_assessment: dict
     confidence_score: float
     evidence_quality_score: float
     recommended_actions: list
+    evaluation: dict
+    review_log: list
     final_report: str
 
 
@@ -48,8 +51,17 @@ def initial_state(user_query: str) -> IntelligenceState:
         missing_information=[],
         investigation_iterations=0,
         risk_score=0.0,
+        risk_assessment={},
         confidence_score=0.0,
         evidence_quality_score=0.0,
         recommended_actions=[],
+        evaluation={},
+        review_log=[],
         final_report="",
     )
+    
+def test_risk_assessment_defaults_to_empty_dict_not_shared():
+    a, b = initial_state("a"), initial_state("b")
+    assert a["risk_assessment"] == {}
+    a["risk_assessment"]["x"] = 1
+    assert b["risk_assessment"] == {}

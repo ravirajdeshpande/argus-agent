@@ -1,8 +1,7 @@
 from types import SimpleNamespace
-
+import numpy as np
 import pytest
-
-from argus.rag.faiss_store import FaissStore, make_embedder
+from argus.rag.faiss_store import FaissStore, make_embedder, make_local_embedder
 
 VOCAB = ["chip", "port", "contract", "fruit"]
 
@@ -84,3 +83,35 @@ def test_make_embedder_calls_client_and_returns_vectors():
     embed = make_embedder(client, model="emb-model")
     assert embed(["a", "b"]) == [[0.1, 0.2], [0.3, 0.4]]
     assert calls == {"model": "emb-model", "input": ["a", "b"]}
+    
+class FakeModel:
+    def __init__(self):
+        self.calls = []
+
+    def encode(self, texts, **kwargs):
+        self.calls.append(texts)
+        return np.array([[float(len(t)), 1.0] for t in texts], dtype="float32")
+
+
+def test_local_embedder_returns_plain_lists():
+    embed = make_local_embedder(model=FakeModel())
+    out = embed(["ab", "abc"])
+    assert out == [[2.0, 1.0], [3.0, 1.0]]
+    assert isinstance(out[0], list)
+
+
+def test_local_embedder_empty_input_skips_model():
+    model = FakeModel()
+    assert make_local_embedder(model=model)([]) == []
+    assert model.calls == []
+
+
+def test_local_embedder_works_with_faiss_store():
+    store = FaissStore(make_local_embedder(model=FakeModel()))
+    store.add(
+        [
+            {"text": "ab", "metadata": {}},
+            {"text": "abcdefgh", "metadata": {}},
+        ]
+    )
+    assert store.search("abcdefgh", k=1)[0]["text"] == "abcdefgh"
