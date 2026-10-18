@@ -48,11 +48,11 @@ def test_paths_live_under_data():
     assert s.faiss_index_dir.is_relative_to(s.data_dir)
     
 
-def test_openai_api_key_defaults_to_empty(monkeypatch):
+def test_openai_api_key_defaults_to_none(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    assert Settings(_env_file=None).openai_api_key == ""
+    assert Settings(_env_file=None).openai_api_key is None
 
 
 def test_openai_api_key_read_from_env(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-    assert Settings(_env_file=None).openai_api_key == "sk-test"
+    assert Settings(_env_file=None).openai_api_key.get_secret_value() == "sk-test"

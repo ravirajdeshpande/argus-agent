@@ -16,6 +16,8 @@ from argus.graph.state import initial_state
 from argus.guardrails.budgets import ControlBudget
 from argus.guardrails.evidence import next_step
 from argus.models.cascade import ModelResponse
+from argus.guardrails.evidence import Claim
+from argus.agents.verifier import resolve_claims  # skip if already imported
 
 AS_OF = date(2026, 10, 17)
 
@@ -333,3 +335,17 @@ def test_node_prunes_resolved_tool_failures():
     )
     update, _ = run("{}", state)
     assert update["missing_information"] == ["need inventory"]
+    
+def _claim(text, claim_type, subject, value):
+    return Claim(
+        claim=text, claim_type=claim_type, subject=subject, value=value,
+        sources=["internal_1"], primary_source=True, source_authority=0.85,
+        recency_score=0.5, corroboration_score=0.5, contradiction=False, confidence=0.6,
+    )
+def test_non_exclusive_claim_types_never_conflict():
+    a = _claim("ABC supplies X", "supplier_status", "abc semiconductor", "supplier of x")
+    b = _claim("ABC is sole approved supplier", "supplier_status", "abc semiconductor", "sole approved supplier")
+    c = _claim("45 days", "inventory", "category x", "45 days")
+    d = _claim("2 months committed", "inventory", "category x", "2 months")
+    _, _, conflicts = resolve_claims([a, b, c, d])
+    assert conflicts == []

@@ -59,4 +59,4 @@ def build_client(settings: Settings | None = None):
     s = settings or get_settings()
     if s.llm_provider == "ollama":
         return OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-    return OpenAI(api_key=s.openai_api_key or None)
+    return OpenAI(api_key=s.openai_api_key.get_secret_value() if s.openai_api_key else None)
