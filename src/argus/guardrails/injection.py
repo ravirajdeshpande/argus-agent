@@ -6,7 +6,13 @@ REMOVED_MARKER = "[REMOVED: possible injection]"
 
 _INJECTION = re.compile(
     r"(ignore|disregard)\s+(all\s+|any\s+)?(previous|prior|above)\s+instructions"
-    r"|reveal\s+(your\s+)?(system\s+)?prompt",
+    r"|(ignore|disregard|forget|override)\s+(all\s+|any\s+|your\s+|the\s+|these\s+|those\s+)*"
+    r"(previous\s+|prior\s+|above\s+|earlier\s+)?(rules|guidelines|instructions|policies|guardrails|safeguards)"
+    r"|reveal\s+(your\s+)?(system\s+)?prompt"
+    r"|(reveal|show|print|repeat|leak|display)\s+(me\s+)?(your|the)\s+(system|hidden|initial)\s+(prompt|instructions)"
+    r"|(you\s+are\s+now|act\s+as|pretend\s+(to\s+be|you\s+are))\s+(an?\s+|the\s+)?"
+    r"(unrestricted|unfiltered|uncensored|jailbroken|dan)\b"
+    r"|\bjailbreak(ed)?\b|\bdeveloper\s+mode\b",
     re.IGNORECASE,
 )
 

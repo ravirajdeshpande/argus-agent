@@ -40,6 +40,7 @@ def build_app(
     use_demo_data: bool = True,
     call=None,
     client=None,
+    budget=None,
     embedder: Embedder | None = None,
 ):
     """Create the real dependencies and compile the ARGUS graph."""
@@ -55,7 +56,7 @@ def build_app(
     }
     return build_graph(
         call=call,
-        budget=ControlBudget.from_settings(settings),
+        budget=budget or ControlBudget.from_settings(settings),
         store=store,
         clearance=clearance,
         tools=tools,

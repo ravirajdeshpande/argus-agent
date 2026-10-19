@@ -59,9 +59,3 @@ def initial_state(user_query: str) -> IntelligenceState:
         review_log=[],
         final_report="",
     )
-    
-def test_risk_assessment_defaults_to_empty_dict_not_shared():
-    a, b = initial_state("a"), initial_state("b")
-    assert a["risk_assessment"] == {}
-    a["risk_assessment"]["x"] = 1
-    assert b["risk_assessment"] == {}

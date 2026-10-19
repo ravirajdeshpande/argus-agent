@@ -5,6 +5,7 @@ from argus.config.settings import Settings
 from argus.graph.graph import run_investigation
 from argus.models.cascade import ModelResponse
 from argus.rag.faiss_store import FaissStore
+from argus.guardrails.budgets import ControlBudget
 
 QUERY = "Will the new chip export restriction affect us?"
 VOCAB = ["supplier", "inventory", "contract"]
@@ -48,7 +49,7 @@ class Script:
                      "rationale": "Category X affected", "impacted_products": [], "impacted_suppliers": [],
                      "scenarios": []}
         elif prompt.startswith("You are the recommendation agent"):
-            reply = {"actions": [{"action": "Keep monitoring notices", "category": "monitoring",
+            reply = {"actions": [{"action": "Keep monitoring notices", "category": "procurement",
                                   "owner": "Risk analyst", "urgency": "low", "rationale": "r",
                                   "sources": ["gov_1"]}]}
         else:
@@ -111,3 +112,17 @@ def test_main_pauses_at_the_gate_and_resumes(tmp_path, capsys):
 
     assert main(["--resume", "--thread-id", "t1"], graph_factory=factory(s)) == 0
     assert "# GLOBAL RISK INTELLIGENCE REPORT" in capsys.readouterr().out
+    
+class SpyBudget(ControlBudget):
+    records = 0
+
+    def record(self, spec, input_tokens, output_tokens):
+        type(self).records += 1
+        return super().record(spec, input_tokens, output_tokens)
+
+
+def test_build_app_uses_the_budget_it_is_given(tmp_path):
+    budget = SpyBudget(max_calls=200, max_tokens=500000, max_cost_usd=2.0)
+    graph = build_app(settings=make_settings(tmp_path), call=Script(), embedder=fake_embed, budget=budget)
+    run_investigation(graph, QUERY)
+    assert SpyBudget.records > 0

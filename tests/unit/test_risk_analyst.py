@@ -1,5 +1,4 @@
 import json
-
 import pytest
 
 from argus.agents.risk_analyst import (
@@ -8,6 +7,10 @@ from argus.agents.risk_analyst import (
     parse_assessment,
     risk_level,
     uncertainty_reasons,
+    MAX_IMPACT_CHARS,
+    MAX_RATIONALE_CHARS, 
+    MAX_SCENARIO_CHARS, 
+    parse_assessment,
 )
 from argus.config.models import Tier
 from argus.graph.routing import route_after_recommendation
@@ -246,3 +249,19 @@ def test_routing_after_failure_goes_to_analyst_review():
     update, _ = run("not json", state)
     state.update(update)
     assert route_after_recommendation(state) == "analyst_review"
+    
+def test_long_text_fields_are_clipped():
+    reply = json.dumps({
+        "impact": 5, "probability": 5, "urgency": 5,
+        "rationale": "word " * 1000, "expected_impact": "x " * 1000,
+        "scenarios": [{"name": "a", "description": "long " * 500, "probability": 1}],
+    })
+    a = parse_assessment(reply)
+    assert len(a["rationale"]) <= MAX_RATIONALE_CHARS + 1 and a["rationale"].endswith("…")
+    assert len(a["expected_impact"]) <= MAX_IMPACT_CHARS + 1
+    assert len(a["scenarios"][0]["description"]) <= MAX_SCENARIO_CHARS + 1
+
+
+def test_short_text_is_unchanged():
+    reply = json.dumps({"impact": 5, "probability": 5, "urgency": 5, "rationale": "Short reason."})
+    assert parse_assessment(reply)["rationale"] == "Short reason."

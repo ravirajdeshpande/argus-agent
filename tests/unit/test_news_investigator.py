@@ -11,6 +11,13 @@ from argus.mcp.government_client import GovernmentClient
 from argus.mcp.market_client import MarketClient
 from argus.mcp.news_client import NewsClient
 from argus.models.cascade import ModelResponse
+import json
+from types import SimpleNamespace
+
+from argus.agents.news_investigator import make_news_investigator_node
+from argus.graph.state import initial_state
+from argus.guardrails.budgets import ControlBudget
+from argus.models.cascade import ModelResponse
 
 CLIENTS = {"news": NewsClient, "government": GovernmentClient, "market": MarketClient}
 
@@ -180,3 +187,26 @@ def test_prompt_contains_objective_and_available_actions_and_budget_is_used():
     assert "Assess chip export rules" in call.prompts[0]
     assert "search_regulation" in call.prompts[0]
     assert b.calls == 1
+    
+def _node(search_result):
+    reply = {"thought": "t", "action": "search_news", "args": {"query": "chips"}}
+
+    def call(tier, prompt):
+        return ModelResponse(text=json.dumps(reply), confidence=0.9, model="m",
+                             input_tokens=1, output_tokens=1, latency_ms=1.0)
+
+    tools = {"news": SimpleNamespace(search_news=lambda **kw: search_result)}
+    budget = ControlBudget(max_calls=10, max_tokens=10000, max_cost_usd=1.0)
+    return make_news_investigator_node(call, budget, tools)
+
+
+def test_list_results_become_one_evidence_item_per_article():
+    update = _node([{"publisher": "A", "summary": "x"}, {"publisher": "B", "summary": "y"}])(initial_state("q"))
+    assert [e["source_id"] for e in update["news_articles"]] == ["news_1", "news_2"]
+    assert [e["result"]["publisher"] for e in update["news_articles"]] == ["A", "B"]
+
+
+def test_empty_result_is_noted_as_missing():
+    update = _node([])(initial_state("q"))
+    assert "search_news returned no results" in update["missing_information"]
+    assert "news_articles" not in update

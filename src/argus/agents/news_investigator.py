@@ -113,18 +113,25 @@ def make_news_investigator_node(call: ModelCaller, budget: ControlBudget, tools:
             update["missing_information"] = [*state["missing_information"], f"{action} failed: {exc}"]
             return update
 
-        cleaned, flagged = _sanitize(raw)
-        update[field] = [
-            *existing,
-            {
-                "source_id": f"{prefix}_{len(existing) + 1}",
-                "tool": action,
-                "args": args,
-                "thought": step["thought"],
-                "result": cleaned,
-                "injection_flagged": flagged,
-            },
-        ]
+        raw_items = raw if isinstance(raw, list) else [raw]
+        if not raw_items:
+            update["missing_information"] = [*state["missing_information"], f"{action} returned no results"]
+            return update
+
+        new = []
+        for k, item in enumerate(raw_items, start=1):
+            cleaned, flagged = _sanitize(item)
+            new.append(
+                {
+                    "source_id": f"{prefix}_{len(existing) + k}",
+                    "tool": action,
+                    "args": args,
+                    "thought": step["thought"],
+                    "result": cleaned,
+                    "injection_flagged": flagged,
+                }
+            )
+        update[field] = [*existing, *new]
         return update
 
     return investigator

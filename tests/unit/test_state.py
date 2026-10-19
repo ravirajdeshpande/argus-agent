@@ -41,3 +41,9 @@ def test_evaluation_defaults_to_empty_dict_not_shared():
     assert a["evaluation"] == {}
     a["evaluation"]["x"] = 1
     assert b["evaluation"] == {}
+    
+def test_risk_assessment_defaults_to_empty_dict_not_shared():
+    a, b = initial_state("a"), initial_state("b")
+    assert a["risk_assessment"] == {}
+    a["risk_assessment"]["x"] = 1
+    assert b["risk_assessment"] == {}

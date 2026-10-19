@@ -349,3 +349,24 @@ def test_non_exclusive_claim_types_never_conflict():
     d = _claim("2 months committed", "inventory", "category x", "2 months")
     _, _, conflicts = resolve_claims([a, b, c, d])
     assert conflicts == []
+
+def test_same_date_in_different_formats_is_not_a_conflict():
+    a = _claim("a", "effective_date", "export controls on advanced equipment", "2027-01-15")
+    b = _claim("b", "effective_date", "export restrictions on advanced equipment", "January 15, 2027")
+    assert resolve_claims([a, b])[2] == []
+
+
+def test_primary_source_resolves_differently_worded_subjects():
+    gov = _claim("gov", "effective_date",
+                 "export controls on advanced semiconductor manufacturing equipment", "January 15, 2027")
+    news = _claim("news", "effective_date",
+                  "new export restrictions on advanced chip making equipment",
+                  "immediately").model_copy(update={"primary_source": False})
+    final, _, conflicts = resolve_claims([gov, news])
+    assert conflicts[0]["resolved"] and conflicts[0]["winning_value"] == "2027-01-15"
+    assert [c.claim for c in final] == ["gov"]
+
+def test_date_inside_a_sentence_matches_a_bare_date():
+    a = _claim("a", "effective_date", "export controls on advanced equipment", "take effect January 15, 2027")
+    b = _claim("b", "effective_date", "export restrictions on advanced equipment", "2027-01-15")
+    assert resolve_claims([a, b])[2] == []

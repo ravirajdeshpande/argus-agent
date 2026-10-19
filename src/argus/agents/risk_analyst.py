@@ -15,6 +15,17 @@ from argus.models.cascade import ModelCaller, run_cascade
 DEFAULT_WEIGHTS = {"impact": 0.4, "probability": 0.35, "urgency": 0.25}
 MEDIUM_RISK_THRESHOLD = 4.0
 
+MAX_RATIONALE_CHARS = 900
+MAX_IMPACT_CHARS = 500
+MAX_SCENARIO_CHARS = 350
+
+
+def _clip(text, limit: int) -> str:
+    text = " ".join(str(text).split())
+    if len(text) <= limit:
+        return text
+    return text[:limit].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+
 RISK_PROMPT = (
     "You are the risk analyst of a global risk-intelligence agent. "
     "Using only the evidence below, assess the risk to the organisation. "
@@ -24,6 +35,8 @@ RISK_PROMPT = (
     "impacted_products (list of strings), impacted_suppliers (list of strings), "
     "scenarios (list of objects with name, description, probability; probabilities sum to 1). "
     "Name only products and suppliers that appear in the evidence. "
+    "Be concise: rationale under 120 words of plain prose (no numbered sections or lists), "
+    "expected_impact under 60 words, at most 3 scenarios with one-sentence descriptions. "
     "Objective: {objective}. Claims: {claims} Conflicts: {conflicts} Internal documents: {documents}"
 )
 
@@ -81,7 +94,7 @@ def _scenarios(value) -> list[dict]:
         if not name or p is None:
             continue
         items.append(
-            {"name": name, "description": str(s.get("description") or "").strip(), "probability": max(p, 0.0)}
+            {"name": name, "description": _clip(s.get("description") or "", MAX_SCENARIO_CHARS), "probability": max(p, 0.0)}
         )
     total = sum(i["probability"] for i in items)
     if total <= 0:
@@ -101,8 +114,8 @@ def parse_assessment(text: str) -> dict | None:
         return None
     return {
         **dims,
-        "expected_impact": str(data.get("expected_impact") or ""),
-        "rationale": str(data.get("rationale") or ""),
+        "expected_impact": _clip(data.get("expected_impact") or "", MAX_IMPACT_CHARS),
+        "rationale": _clip(data.get("rationale") or "", MAX_RATIONALE_CHARS),
         "impacted_products": _str_list(data.get("impacted_products")),
         "impacted_suppliers": _str_list(data.get("impacted_suppliers")),
         "scenarios": _scenarios(data.get("scenarios")),

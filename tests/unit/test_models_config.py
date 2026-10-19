@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from argus.config.models import Tier, get_model_spec, next_tier
 from argus.config.settings import Settings
+from argus.guardrails.budgets import ControlBudget
 
 
 def cfg(**kw) -> Settings:
@@ -50,3 +51,31 @@ def test_next_tier_escalates_and_stops_at_top():
     assert next_tier(Tier.TIER_1) == Tier.TIER_2
     assert next_tier(Tier.TIER_2) == Tier.TIER_3
     assert next_tier(Tier.TIER_3) is None
+    
+def _settings(**over):
+    return Settings(_env_file=None, **over)
+
+
+def test_known_openai_models_carry_their_prices():
+    s = _settings(llm_provider="openai", openai_guardrail_model="gpt-4.1-nano",
+                  openai_mid_model="gpt-4.1-mini", openai_agent_model="gpt-4.1")
+    assert (get_model_spec(Tier.TIER_1, s).input_cost_per_1m, get_model_spec(Tier.TIER_1, s).output_cost_per_1m) == (0.10, 0.40)
+    assert (get_model_spec(Tier.TIER_2, s).input_cost_per_1m, get_model_spec(Tier.TIER_2, s).output_cost_per_1m) == (0.40, 1.60)
+    assert (get_model_spec(Tier.TIER_3, s).input_cost_per_1m, get_model_spec(Tier.TIER_3, s).output_cost_per_1m) == (2.00, 8.00)
+
+
+def test_unknown_openai_model_is_priced_at_zero():
+    spec = get_model_spec(Tier.TIER_3, _settings(llm_provider="openai", openai_agent_model="some-new-model"))
+    assert (spec.input_cost_per_1m, spec.output_cost_per_1m) == (0.0, 0.0)
+
+
+def test_ollama_models_are_free_even_if_the_name_matches_an_openai_model():
+    spec = get_model_spec(Tier.TIER_3, _settings(llm_provider="ollama", ollama_agent_model="gpt-4.1"))
+    assert (spec.input_cost_per_1m, spec.output_cost_per_1m) == (0.0, 0.0)
+
+
+def test_budget_cost_reflects_the_model_price():
+    spec = get_model_spec(Tier.TIER_3, _settings(llm_provider="openai", openai_agent_model="gpt-4.1"))
+    budget = ControlBudget(max_calls=10, max_tokens=10_000_000, max_cost_usd=100.0)
+    budget.record(spec, 1_000_000, 1_000_000)
+    assert budget.cost_usd == pytest.approx(10.0)
