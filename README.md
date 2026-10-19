@@ -4,7 +4,7 @@ ARGUS is an agentic AI system that watches news and other sources for risks, che
 
 This is the **master README**: a high-level map of the repository. Each folder under `src/argus/` has its own detailed README.
 
-Built as a training assignment from the coach's brief `ARGUS_Agentic_AI_Use_Case.docx` (structure §27, model cascade §13, metrics §24, Definition of Done §28).
+Built as a training assignment from `ARGUS_Agentic_AI_Use_Case.docx` (structure §27, model cascade §13, metrics §24, Definition of Done §28).
 
 ---
 
